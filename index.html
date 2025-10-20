@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Evaluación IA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827; /* Gray-900 */
+        }
+        .glass-card {
+            background: rgba(31, 41, 55, 0.6); /* Gray-800 with 60% opacity */
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .option-btn {
+            transition: all 0.2s ease-in-out;
+        }
+        .option-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 190, 255, 0.2);
+            background-color: #1d4ed8; /* Blue-700 */
+        }
+        .correct {
+            background-color: #16a34a !important; /* Green-600 */
+            border-color: #22c55e !important; /* Green-500 */
+        }
+        .incorrect {
+            background-color: #dc2626 !important; /* Red-600 */
+            border-color: #ef4444 !important; /* Red-500 */
+        }
+        select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%239CA3AF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: .65em auto;
+        }
+    </style>
+</head>
+<body class="text-gray-200">
+
+    <main class="min-h-screen w-full flex flex-col items-center justify-center p-4 bg-gradient-to-br from-[#111827] to-[#0c1f41]">
+        
+        <div id="quiz-container" class="glass-card rounded-2xl p-6 md:p-8 w-full max-w-3xl shadow-2xl shadow-blue-500/10">
+            <!-- Header -->
+            <div class="text-center mb-6">
+                <h1 class="text-3xl md:text-4xl font-bold text-white tracking-tight">Simulador de Evaluación IA</h1>
+                <p class="text-blue-300 mt-2">Selecciona una pregunta y pon a prueba tus conocimientos.</p>
+            </div>
+            
+            <!-- Question Selector -->
+            <div class="mb-6">
+                <label for="question-selector" class="block mb-2 text-sm font-medium text-gray-300">Elige una pregunta:</label>
+                <select id="question-selector" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                    <option selected disabled>Selecciona una pregunta de la lista...</option>
+                </select>
+            </div>
+            
+            <!-- Question Display -->
+            <div id="question-area" class="hidden">
+                <div class="bg-gray-900/50 p-4 rounded-lg mb-4">
+                    <h2 id="question-text" class="text-lg md:text-xl font-semibold text-white"></h2>
+                </div>
+                <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Options will be injected here -->
+                </div>
+            </div>
+
+            <!-- Feedback Area -->
+            <div id="feedback-area" class="hidden mt-6 p-5 rounded-lg">
+                <h3 id="feedback-title" class="text-xl font-bold mb-2"></h3>
+                <p id="feedback-justification" class="text-base"></p>
+            </div>
+        </div>
+
+        <footer class="text-center mt-8 text-gray-500 text-sm">
+            <p>&copy; 2025 Plataforma de Aprendizaje Interactivo. Todos los derechos reservados.</p>
+        </footer>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const quizData = [
+                {
+                    "id": 1,
+                    "text": "¿Cuál es un mito común sobre la IA en educación?",
+                    "options": ["La IA reemplazará a los docentes.", "La IA tiene aplicaciones valiosas en todas las áreas del currículo.", "La IA está diseñada para amplificar las capacidades docentes.", "La IA puede ayudar a los docentes a ahorrar tiempo en tareas rutinarias."],
+                    "correctAnswerIndex": 0,
+                    "justification": "Es un mito pensar que la IA reemplazará a los docentes. En realidad, la IA se concibe como una herramienta para potenciar y amplificar las capacidades de los educadores, no para sustituirlos. Automatiza tareas y personaliza el aprendizaje, permitiendo que el docente se enfoque en la conexión humana."
+                },
+                {
+                    "id": 2,
+                    "text": "¿Cuál de los siguientes es un ejemplo de cómo la IA puede utilizarse en una escuela urbana con buena conectividad?",
+                    "options": ["Usar la IA para analizar los resultados de las evaluaciones.", "Crear una línea de tiempo visual con recortes de periódicos.", "Descargar una aplicación de IA que funciona sin internet.", "Utilizar ChatGPT para crear fichas de trabajo personalizadas."],
+                    "correctAnswerIndex": 3,
+                    "justification": "La buena conectividad permite el uso de modelos de IA avanzados como ChatGPT para generar contenido educativo personalizado en tiempo real. Esta es una aplicación directa y poderosa que aprovecha la infraestructura tecnológica disponible."
+                },
+                {
+                    "id": 3,
+                    "text": "¿Cuál es la principal diferencia entre la IA tradicional y la IA generativa?",
+                    "options": ["No hay diferencia.", "La IA generativa utiliza menos datos.", "La IA tradicional crea contenido, mientras que la IA generativa clasifica.", "La IA tradicional responde con información existente, mientras la IA generativa crea resultados inéditos."],
+                    "correctAnswerIndex": 3,
+                    "justification": "La diferencia clave es la creación. La IA tradicional analiza y actúa sobre datos existentes (clasificar, predecir). La IA generativa produce contenido completamente nuevo (texto, imágenes, etc.) que no existía previamente en sus datos de entrenamiento."
+                },
+                 {
+                    "id": 4,
+                    "text": "¿Qué son los Modelos de Lenguaje Grande (LLM)?",
+                    "options": ["Modelos de IA que integran múltiples tipos de entrada/salida.", "Un subtipo de modelos fundacionales para entender y generar texto.", "Modelos de IA de propósito general.", "Modelos de IA para generar imágenes."],
+                    "correctAnswerIndex": 1,
+                    "justification": "Los LLM son una categoría especializada de modelos de IA, entrenados con enormes cantidades de texto para comprender, generar y procesar el lenguaje natural humano con gran fluidez y coherencia."
+                },
+                {
+                    "id": 5,
+                    "text": "¿Cuál herramienta de IA es mejor para generar textos, explicaciones y actividades a partir de instrucciones escritas?",
+                    "options": ["Gemini", "Claude", "ChatGPT", "Copilot"],
+                    "correctAnswerIndex": 2,
+                    "justification": "Aunque todas las opciones son capaces, ChatGPT se ha destacado y popularizado masivamente por su habilidad para generar una amplia variedad de contenido textual coherente y contextualizado a partir de prompts."
+                },
+                {
+                    "id": 6,
+                    "text": "¿Qué herramienta de IA es más adecuada para analizar imágenes, buscar información actualizada e integrarse con el ecosistema de Google?",
+                    "options": ["Claude", "Gemini", "Copilot", "ChatGPT"],
+                    "correctAnswerIndex": 1,
+                    "justification": "Gemini (anteriormente Bard) es el modelo de IA de Google. Está diseñado para integrarse profundamente con los servicios de Google y tiene acceso directo a la información más reciente de la web, además de capacidades multimodales (texto e imágenes)."
+                },
+                {
+                    "id": 7,
+                    "text": "¿Cuál de las siguientes NO es una aplicación educativa del Aprendizaje Automático?",
+                    "options": ["Agrupación de estudiantes.", "Simuladores de vuelo.", "Sistemas de calificación automática.", "Correctores inteligentes."],
+                    "correctAnswerIndex": 1,
+                    "justification": "Los simuladores de vuelo, aunque usan tecnología avanzada, se basan más en modelos físicos y de sistemas complejos que en el aprendizaje a partir de datos, que es la base del Aprendizaje Automático (Machine Learning)."
+                },
+                {
+                    "id": 8,
+                    "text": "¿Qué tipo de Aprendizaje Automático se asemeja más a un profesor que proporciona ejercicios resueltos?",
+                    "options": ["Aprendizaje No Supervisado.", "Aprendizaje por Refuerzo.", "Aprendizaje Supervisado.", "Aprendizaje Profundo."],
+                    "correctAnswerIndex": 2,
+                    "justification": "En el Aprendizaje Supervisado, el modelo se entrena con un conjunto de datos etiquetado (como 'ejercicios resueltos'), donde se le da tanto la entrada como la salida correcta. El modelo 'aprende' la relación entre ambos."
+                },
+                {
+                    "id": 9,
+                    "text": "¿Cuál es el rol del docente en relación con la IA?",
+                    "options": ["Delegar completamente las decisiones a la IA.", "Ignorar la IA.", "Mantener el criterio pedagógico y la responsabilidad.", "Utilizar la IA sin cuestionar sus resultados."],
+                    "correctAnswerIndex": 2,
+                    "justification": "El docente debe actuar como un 'humano en el circuito' (human-in-the-loop), utilizando la IA como una herramienta poderosa pero manteniendo siempre la supervisión, el juicio crítico y la responsabilidad final sobre las decisiones educativas."
+                },
+                {
+                    "id": 10,
+                    "text": "¿Cuál de los siguientes principios éticos es fundamental al usar la IA en el aula?",
+                    "options": ["Transparencia, equidad, privacidad, responsabilidad.", "Automatización, eficiencia, velocidad.", "Innovación, flexibilidad, adaptabilidad.", "Productividad, creatividad, originalidad."],
+                    "correctAnswerIndex": 0,
+                    "justification": "Estos cuatro pilares son esenciales: ser transparentes sobre cómo se usa la IA, asegurar que sea justa y no perpetúe sesgos, proteger la privacidad de los datos de los estudiantes y ser responsables de sus resultados."
+                },
+                {
+                    "id": 11,
+                    "text": "¿Cuál es la principal ventaja de usar la IA para atender la diversidad en el aula?",
+                    "options": ["Homogeneiza el aprendizaje.", "Ayuda a crear puentes entre el contenido y las necesidades específicas.", "Simplifica la enseñanza.", "Disminuye la necesidad de que los docentes comprendan estilos de aprendizaje."],
+                    "correctAnswerIndex": 1,
+                    "justification": "La IA puede adaptar materiales y actividades a diferentes niveles de habilidad, estilos de aprendizaje e intereses, creando un camino más personalizado e inclusivo para cada estudiante."
+                },
+                {
+                    "id": 12,
+                    "text": "¿Cómo puede la IA apoyar la gamificación en el aula?",
+                    "options": ["Solo para juegos complejos.", "Democratiza la creación de elementos lúdicos.", "Reduce la motivación.", "Requiere conocimientos avanzados en diseño de juegos."],
+                    "correctAnswerIndex": 1,
+                    "justification": "La IA permite a los docentes sin experiencia en programación o diseño gráfico crear fácilmente historias, personajes, insignias y sistemas de puntos, haciendo que la gamificación sea accesible para todos."
+                },
+                {
+                    "id": 13,
+                    "text": "¿Por qué es importante refinar iterativamente los prompts?",
+                    "options": ["Para confundir a la IA.", "Para obtener resultados óptimos y ajustados.", "Para ahorrar tiempo.", "Es la única manera de que funcione."],
+                    "correctAnswerIndex": 1,
+                    "justification": "El refinamiento iterativo es un diálogo con la IA. Al ajustar y añadir detalles al prompt, se guía al modelo para que genere un resultado que se alinee cada vez más con la necesidad específica del usuario."
+                },
+                {
+                    "id": 14,
+                    "text": "¿Cuál es un error común al escribir prompts?",
+                    "options": ["Usar delimitadores.", "No proporcionar suficiente contexto.", "Dar ejemplos concretos.", "Ser demasiado específico."],
+                    "correctAnswerIndex": 1,
+                    "justification": "La falta de contexto es uno de los errores más comunes. Si la IA no entiende el propósito, la audiencia o el formato deseado, el resultado será genérico y probablemente inútil."
+                },
+                {
+                    "id": 15,
+                    "text": "¿Qué herramienta de IA se integra a una plataforma de diseño gráfico para crear materiales visuales?",
+                    "options": ["Canva AI", "Quizziz AI", "Gamma", "MagicSchool.ai"],
+                    "correctAnswerIndex": 0,
+                    "justification": "Canva ha integrado un conjunto de herramientas de IA llamado 'Magic Studio' que permite generar imágenes, textos y diseños directamente dentro de su popular plataforma de diseño gráfico."
+                },
+                {
+                    "id": 16,
+                    "text": "¿Qué plataforma está orientada a apoyar planificación, diferenciación y evaluación con plantillas para el aula?",
+                    "options": ["Gamma", "NotebookLM (Google)", "Canva AI", "MagicSchool.ai"],
+                    "correctAnswerIndex": 3,
+                    "justification": "MagicSchool.ai está específicamente diseñada para docentes, ofreciendo más de 60 herramientas basadas en plantillas para tareas educativas concretas como planificar lecciones, crear rúbricas y comunicarse con las familias."
+                },
+                {
+                    "id": 17,
+                    "text": "¿Cuál es la importancia de usar prompts detallados al generar imágenes con IA?",
+                    "options": ["Limita la creatividad.", "Permite obtener resultados más precisos y de calidad.", "Garantiza imágenes genéricas.", "Reduce el tiempo de generación."],
+                    "correctAnswerIndex": 1,
+                    "justification": "En la generación de imágenes, el detalle lo es todo. Un prompt específico (estilo, composición, colores, etc.) guía a la IA para que cree una imagen que se ajuste exactamente a la visión y necesidad pedagógica."
+                },
+                {
+                    "id": 18,
+                    "text": "¿Cuál es la función principal de las herramientas de IA generativa para imágenes en educación?",
+                    "options": ["Generar o modificar imágenes desde texto, facilitando recursos visuales personalizados.", "Limitar el acceso a imágenes.", "Sustituir habilidades de diseño.", "Automatizar la creación de imágenes genéricas."],
+                    "correctAnswerIndex": 0,
+                    "justification": "Su principal valor radica en la capacidad de crear recursos visuales a medida para cualquier tema, permitiendo a los docentes ilustrar conceptos abstractos, crear personajes para historias o generar imágenes para actividades."
+                },
+                {
+                    "id": 19,
+                    "text": "¿Qué técnica avanzada implica construir el prompt por niveles de complejidad?",
+                    "options": ["Prompts negativos", "Uso de modificadores", "Especificación de estilos", "Técnica de prompt por capas"],
+                    "correctAnswerIndex": 3,
+                    "justification": "La técnica de capas consiste en comenzar con una idea simple y añadir progresivamente capas de detalle (composición, iluminación, estilo artístico, etc.) para construir una imagen compleja y controlada."
+                },
+                {
+                    "id": 20,
+                    "text": "¿Por qué es importante evaluar las imágenes generadas por IA antes de usarlas?",
+                    "options": ["Para evitar iterar.", "Para ahorrar tiempo.", "Para garantizar la precisión, relevancia y adecuación cultural.", "Porque todas son adecuadas automáticamente."],
+                    "correctAnswerIndex": 2,
+                    "justification": "Las IAs pueden generar imágenes con imprecisiones, sesgos o elementos culturalmente inapropiados. Es crucial que el docente revise y valide cada imagen para asegurar que sea correcta y segura para el entorno educativo."
+                },
+                {
+                    "id": 21,
+                    "text": "¿Qué estrategia es más efectiva para integrar videos de IA en contextos con recursos limitados?",
+                    "options": ["Asumir que no son útiles.", "Usar videos largos.", "Descargar los videos cuando se tenga conectividad y usarlos sin conexión.", "Depender de la conexión a internet."],
+                    "correctAnswerIndex": 2,
+                    "justification": "La estrategia 'descargar y llevar' (download and go) es la más práctica. Permite aprovechar momentos de buena conectividad para preparar los recursos y luego utilizarlos en el aula sin depender de una conexión a internet estable."
+                },
+                {
+                    "id": 22,
+                    "text": "¿Cuál es la principal ventaja de usar herramientas de IA para crear videos educativos?",
+                    "options": ["Eliminar la necesidad de habilidades técnicas.", "Asegurar videos perfectos.", "Sustituir al docente.", "Reducir el tiempo para crear materiales de alta calidad."],
+                    "correctAnswerIndex": 3,
+                    "justification": "La producción de video tradicional es lenta y costosa. Las herramientas de IA aceleran drásticamente el proceso, permitiendo a los docentes crear videos de alta calidad en una fracción del tiempo."
+                },
+                {
+                    "id": 23,
+                    "text": "¿Cuál de las siguientes herramientas de IA para videos se menciona con versión gratuita?",
+                    "options": ["Adobe Premiere Pro.", "Avid Media Composer.", "RunwayML.", "Final Cut Pro."],
+                    "correctAnswerIndex": 2,
+                    "justification": "RunwayML es una potente suite de herramientas de IA para video que ofrece un plan gratuito, lo que la hace accesible para que los educadores experimenten con la generación y edición de video asistida por IA."
+                },
+                {
+                    "id": 24,
+                    "text": "¿Cuál es la función de la ingeniería de prompts en la creación de videos con IA?",
+                    "options": ["Seleccionar hardware.", "Diseñar la interfaz.", "Gestionar derechos de autor.", "Formular instrucciones claras para que la IA genere los resultados deseados."],
+                    "correctAnswerIndex": 3,
+                    "justification": "Al igual que con el texto y las imágenes, la ingeniería de prompts es el arte de escribir instrucciones efectivas para guiar a la IA en la creación de escenas, personajes y estilos visuales para el video."
+                },
+                {
+                    "id": 25,
+                    "text": "¿Qué herramienta de IA es útil para convertir materiales existentes (PDF, libros) en audio?",
+                    "options": ["ElevenLabs", "Lovo.ai", "TTSMaker", "NaturalReader"],
+                    "correctAnswerIndex": 3,
+                    "justification": "NaturalReader está diseñado específicamente para leer en voz alta una amplia variedad de formatos de documentos (PDF, Docx, etc.) y páginas web, siendo una herramienta excelente para crear versiones en audio de materiales de lectura."
+                },
+                {
+                    "id": 26,
+                    "text": "¿Qué consideración ética es más importante al generar voz con IA en el aula?",
+                    "options": ["Variedad de idiomas.", "Derechos de autor.", "Calidad de voz.", "Facilidad de uso."],
+                    "correctAnswerIndex": 1,
+                    "justification": "Es fundamental asegurarse de tener los derechos para convertir un texto en audio, especialmente si se trata de material protegido. Además, algunas plataformas prohíben el uso de voces clonadas para fines comerciales o engañosos."
+                },
+                {
+                    "id": 27,
+                    "text": "¿Qué componente es fundamental en un prompt avanzado para generar audio educativo?",
+                    "options": ["Solo el texto.", "Solo velocidad y tono.", "Un resumen breve.", "Perfil de voz, especificaciones técnicas, mapa emocional, contexto pedagógico."],
+                    "correctAnswerIndex": 3,
+                    "justification": "Un prompt avanzado va más allá del simple texto. Define quién es el 'hablante' (perfil), cómo debe sonar (emociones, ritmo) y para qué se usará (contexto), lo que permite a la IA generar un audio mucho más rico y efectivo."
+                },
+                {
+                    "id": 28,
+                    "text": "¿Qué se debe hacer al narrar secuencias numéricas en matemáticas?",
+                    "options": ["Pausar 0.8 segundos entre cada número.", "Usar un tono monótono.", "Leer los números rápido.", "Acelerar la velocidad."],
+                    "correctAnswerIndex": 0,
+                    "justification": "Instruir a la IA para que haga una pausa deliberada entre los números (por ejemplo, con la etiqueta <break time='0.8s' /> en SSML) mejora drásticamente la claridad y la comprensión para el oyente."
+                },
+                {
+                    "id": 29,
+                    "text": "¿Qué prompt sería más efectivo para adaptar un texto sobre la fotosíntesis para estudiantes con dificultades de lectura?",
+                    "options": ["Ensayo filosófico.", "Texto científico avanzado.", "Adapta... Simplifica el lenguaje y usa ejemplos visuales.", "Mapa conceptual complejo."],
+                    "correctAnswerIndex": 2,
+                    "justification": "Este prompt es efectivo porque es específico. Indica claramente la acción ('adapta'), la audiencia ('estudiantes con dificultad lectora') y las estrategias a seguir ('simplifica el lenguaje', 'usa ejemplos visuales')."
+                },
+                {
+                    "id": 30,
+                    "text": "¿Cuál es el principal beneficio de la IA generativa en educación?",
+                    "options": ["Reemplazar a los docentes.", "Eliminar la necesidad de adaptaciones.", "Adaptar los contenidos a las necesidades de cada estudiante.", "Automatizar la evaluación."],
+                    "correctAnswerIndex": 2,
+                    "justification": "La personalización a escala es el mayor superpoder de la IA generativa en educación. Permite crear versiones de un mismo contenido adaptadas a diferentes niveles de lectura, intereses y estilos de aprendizaje."
+                },
+                {
+                    "id": 31,
+                    "text": "¿Qué consideración ética es fundamental al usar IA en contextos inclusivos?",
+                    "options": ["La transparencia no es relevante.", "La privacidad y los datos de los estudiantes deben ser protegidos.", "La IA debe sustituir al docente.", "No es necesario verificar los contenidos."],
+                    "correctAnswerIndex": 1,
+                    "justification": "La protección de datos de los estudiantes es primordial. Se debe evitar introducir información personal identificable en las herramientas de IA y cumplir con las normativas de privacidad vigentes."
+                },
+                {
+                    "id": 32,
+                    "text": "¿Qué principal desafío busca eliminar el Diseño Universal para el Aprendizaje (DUA)?",
+                    "options": ["La flexibilidad en la presentación.", "Las barreras en el aprendizaje a través de la flexibilidad.", "La necesidad de que los estudiantes se adapten a un modelo rígido.", "El uso de tecnologías avanzadas."],
+                    "correctAnswerIndex": 1,
+                    "justification": "El DUA se centra en eliminar proactivamente las barreras del currículo diseñando desde el inicio múltiples formas de presentación, expresión y motivación, en lugar de crear adaptaciones a posteriori."
+                },
+                {
+                    "id": 33,
+                    "text": "¿Cuál de los siguientes no es un desafío de las adaptaciones curriculares tradicionales que la IA puede mitigar?",
+                    "options": ["Falta de personalización.", "Seguimiento y ajuste continuo.", "Conocimiento especializado del docente.", "Tiempo y recursos limitados."],
+                    "correctAnswerIndex": 0,
+                    "justification": "Las adaptaciones tradicionales SÍ buscan la personalización, pero a menudo se quedan cortas por falta de tiempo y recursos. La IA puede ayudar con el tiempo, el seguimiento y el conocimiento, pero el objetivo de la personalización ya existe en el método tradicional."
+                },
+                {
+                    "id": 34,
+                    "text": "¿Qué concepto se define como 'cualidad de los materiales para ser comprendidos por personas con diferentes capacidades cognitivas'?",
+                    "options": ["Escalabilidad educativa.", "Personalización del aprendizaje.", "Sistemas adaptativos.", "Accesibilidad cognitiva."],
+                    "correctAnswerIndex": 3,
+                    "justification": "La accesibilidad cognitiva se refiere a hacer la información fácil de entender, eliminando la complejidad innecesaria en el lenguaje, la estructura y la presentación, un área donde la IA puede ayudar significativamente."
+                },
+                {
+                    "id": 35,
+                    "text": "¿Cuál es el objetivo principal de la integración de la IA en entornos educativos en este módulo?",
+                    "options": ["Limitar el acceso a experiencias.", "Reemplazar al docente.", "Dotar a los docentes con competencias prácticas para aprovechar la IA.", "Aumentar conocimientos tecnológicos de estudiantes."],
+                    "correctAnswerIndex": 2,
+                    "justification": "El enfoque principal es empoderar a los docentes, dándoles las habilidades y herramientas necesarias para que puedan utilizar la IA de manera efectiva y ética en sus propias aulas para mejorar el aprendizaje."
+                },
+                {
+                    "id": 36,
+                    "text": "¿Qué concepto describe la capacidad de un proyecto para ser modificado según el contexto sin perder su esencia?",
+                    "options": ["Aprendizaje aumentado.", "Zona de desarrollo próximo tecnológica.", "Adaptabilidad contextual.", "IA como facilitadora."],
+                    "correctAnswerIndex": 2,
+                    "justification": "La adaptabilidad contextual es clave para que las innovaciones educativas sean exitosas. Significa que un proyecto diseñado para una escuela urbana con alta tecnología puede ser adaptado para una escuela rural con pocos recursos, manteniendo sus objetivos pedagógicos."
+                },
+                {
+                    "id": 37,
+                    "text": "¿Qué característica convierte a la IA generativa en aliada para el diseño de proyectos?",
+                    "options": ["Su versatilidad para trabajar con textos, imágenes, audio y más.", "Su necesidad de conocimientos técnicos.", "Su capacidad para limitar recursos.", "Su enfoque en la automatización de la evaluación."],
+                    "correctAnswerIndex": 0,
+                    "justification": "La naturaleza multimodal de la IA generativa permite crear proyectos educativos ricos y variados, combinando diferentes formatos para hacer el aprendizaje más atractivo y accesible para todos los estudiantes."
+                },
+                {
+                    "id": 38,
+                    "text": "Según los conceptos clave, ¿qué se entiende por 'Adaptabilidad contextual'?",
+                    "options": ["La habilidad de un proyecto para ser modificado según las condiciones específicas.", "La distancia entre lo que los estudiantes pueden hacer con y sin IA.", "El proceso educativo que amplía las capacidades con IA.", "La capacidad de la IA para personalizar."],
+                    "correctAnswerIndex": 0,
+                    "justification": "Esta es la definición precisa. Se refiere a la flexibilidad de un diseño pedagógico para ajustarse a diferentes realidades (recursos, cultura, alumnado) sin perder su propósito educativo fundamental."
+                },
+                {
+                    "id": 39,
+                    "text": "¿Por qué la IA Generativa rompe las fronteras entre asignaturas?",
+                    "options": ["Porque compartimenta el conocimiento.", "Porque exige especialización.", "Porque reemplaza la colaboración docente.", "Porque ayuda a encontrar conexiones y generar recursos adaptados."],
+                    "correctAnswerIndex": 3,
+                    "justification": "La IA puede analizar grandes cantidades de información para sugerir conexiones inesperadas entre temas (ej. la matemática en el arte, la química en la cocina), facilitando el diseño de proyectos interdisciplinarios auténticos."
+                },
+                {
+                    "id": 40,
+                    "text": "¿Qué se entiende por 'Aprendizaje interdisciplinario'?",
+                    "options": ["Uso de IA en una sola disciplina.", "Estudio individual de cada asignatura.", "Memorizar información de múltiples materias.", "Conectar contenidos, habilidades y perspectivas de diferentes asignaturas."],
+                    "correctAnswerIndex": 3,
+                    "justification": "Esta es la definición central del aprendizaje interdisciplinario: un enfoque holístico que busca una comprensión más profunda al integrar conocimientos de varias áreas para resolver un problema o explorar un tema complejo."
+                },
+                {
+                    "id": 41,
+                    "text": "¿Por qué los docentes deben preocuparse por los sesgos en la IA?",
+                    "options": ["La tecnología es neutral.", "Los sesgos solo afectan áreas técnicas.", "La IA hereda los sesgos de los datos con los que fue entrenada.", "La detección de sesgos es una estrategia contra el plagio."],
+                    "correctAnswerIndex": 2,
+                    "justification": "Los modelos de IA aprenden de datos generados por humanos, que contienen sesgos sociales y culturales. Si no se abordan, la IA puede perpetuar y amplificar estereotipos de género, raza o cultura en el aula."
+                },
+                {
+                    "id": 42,
+                    "text": "¿Qué concepto se refiere a la capacidad de los estudiantes para controlar su información personal?",
+                    "options": ["Alfabetización en IA.", "Privacidad digital.", "Sobredependencia tecnológica.", "Pensamiento algorítmico."],
+                    "correctAnswerIndex": 1,
+                    "justification": "La privacidad digital es un derecho y una competencia fundamental en el siglo XXI. Implica comprender qué datos se comparten, con quién y con qué propósito, especialmente al interactuar con sistemas de IA."
+                },
+                {
+                    "id": 43,
+                    "text": "¿Cuál es el objetivo principal de crear una política escolar de uso seguro de IA?",
+                    "options": ["Asignar un único responsable.", "Restringir completamente el uso.", "Establecer directrices compartidas y responsabilidades claras.", "Promover el uso sin restricción."],
+                    "correctAnswerIndex": 2,
+                    "justification": "Una política escolar efectiva no prohíbe, sino que guía. Su objetivo es crear un marco común que defina qué es un uso aceptable, cómo proteger a los estudiantes y quién es responsable de cada aspecto, fomentando un uso seguro e innovador."
+                },
+                {
+                    "id": 44,
+                    "text": "¿Qué implica la 'tokenización' en el contexto de la IA?",
+                    "options": ["Asignación de insignias.", "Conversión de texto a imágenes.", "El proceso mediante el cual la IA divide el texto en unidades.", "Creación de claves de seguridad."],
+                    "correctAnswerIndex": 2,
+                    "justification": "La tokenización es el primer paso para que un LLM procese el texto. Lo descompone en piezas más pequeñas (palabras, sub-palabras o caracteres) llamadas 'tokens'. El número de tokens a menudo determina el coste y la capacidad de procesamiento del modelo."
+                },
+                {
+                    "id": 45,
+                    "text": "¿Cuál es la principal razón para anonimizar los datos de los estudiantes antes de usarlos en IA?",
+                    "options": ["Cumplir con requisitos de la institución.", "Proteger la privacidad y cumplir con la normativa.", "Facilitar el análisis de datos.", "Evitar pagar una licencia."],
+                    "correctAnswerIndex": 1,
+                    "justification": "La protección de la privacidad del estudiante es una obligación legal y ética. Anonimizar los datos (eliminar nombres, fechas de nacimiento, etc.) es el paso más importante para prevenir la exposición de información sensible."
+                },
+                {
+                    "id": 46,
+                    "text": "¿Qué significa 'anonimizar' los datos de los estudiantes?",
+                    "options": ["Obtener permiso de los padres.", "Compartir datos solo con el proveedor.", "Eliminar cualquier información que pueda identificar al estudiante.", "Utilizar los datos con fines educativos."],
+                    "correctAnswerIndex": 2,
+                    "justification": "La anonimización real implica remover todos los identificadores directos (nombre) e indirectos (combinación de datos que podrían llevar a identificar a alguien) para que los datos no puedan ser vinculados a un individuo específico."
+                },
+                {
+                    "id": 47,
+                    "text": "¿Cuál es el propósito principal de integrar la IA en los entornos educativos?",
+                    "options": ["Limitar la interacción humana.", "Reemplazar a los docentes.", "Dotar a los docentes de herramientas para enriquecer la experiencia educativa.", "Automatizar la evaluación."],
+                    "correctAnswerIndex": 2,
+                    "justification": "El objetivo final de la IA en educación es servir como una herramienta poderosa para los docentes, ayudándoles a personalizar el aprendizaje, crear materiales atractivos y, en última instancia, mejorar la experiencia y los resultados de sus estudiantes."
+                },
+                {
+                    "id": 48,
+                    "text": "¿Qué criterio de calidad en los instrumentos de evaluación indica si la herramienta mide lo que realmente debe medir?",
+                    "options": ["Practicidad.", "Objetividad.", "Confiabilidad.", "Validez."],
+                    "correctAnswerIndex": 3,
+                    "justification": "La validez es el criterio más importante. Se pregunta: '¿Estoy evaluando realmente la habilidad o el conocimiento que me propuse evaluar?'. Una prueba puede ser confiable pero no válida si mide consistentemente algo incorrecto."
+                },
+                {
+                    "id": 49,
+                    "text": "¿Cuál es el propósito de una rúbrica de evaluación?",
+                    "options": ["Determinar si se aprueba o reprueba.", "Proporcionar criterios específicos y niveles de desempeño.", "Asignar una calificación numérica.", "Comparar estudiantes entre sí."],
+                    "correctAnswerIndex": 1,
+                    "justification": "Una rúbrica desglosa una tarea en varios criterios y describe cómo se ve el desempeño en diferentes niveles (ej. 'sobresaliente', 'aceptable', 'necesita mejorar'). Esto hace la evaluación transparente y formativa tanto para el docente como para el estudiante."
+                },
+                {
+                    "id": 50,
+                    "text": "Al crear un prompt para que la IA genere una rúbrica, ¿qué información es importante incluir?",
+                    "options": ["El nombre de la herramienta de IA.", "Únicamente el número de criterios.", "El nivel educativo, los objetivos de aprendizaje y el tipo de evaluación.", "Solo el tipo de rúbrica."],
+                    "correctAnswerIndex": 2,
+                    "justification": "Para generar una rúbrica útil, la IA necesita el contexto completo: para quién es (nivel educativo), qué se está midiendo (objetivos de aprendizaje) y cómo se usará (tipo de evaluación: formativa, sumativa, etc.)."
+                }
+            ];
+
+
+            const selector = document.getElementById('question-selector');
+            const questionArea = document.getElementById('question-area');
+            const questionText = document.getElementById('question-text');
+            const optionsContainer = document.getElementById('options-container');
+            const feedbackArea = document.getElementById('feedback-area');
+            const feedbackTitle = document.getElementById('feedback-title');
+            const feedbackJustification = document.getElementById('feedback-justification');
+
+            // Populate selector
+            quizData.forEach((q, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = `Pregunta ${q.id}: ${q.text.substring(0, 70)}...`;
+                selector.appendChild(option);
+            });
+            
+            selector.addEventListener('change', (e) => {
+                displayQuestion(e.target.value);
+            });
+
+            function displayQuestion(index) {
+                const question = quizData[index];
+                if (!question) return;
+
+                // Reset UI
+                feedbackArea.classList.add('hidden');
+                optionsContainer.innerHTML = '';
+                
+                // Display question
+                questionText.textContent = question.text;
+                question.options.forEach((optionText, i) => {
+                    const button = document.createElement('button');
+                    button.textContent = optionText;
+                    button.classList.add('option-btn', 'w-full', 'text-left', 'p-4', 'rounded-lg', 'border-2', 'border-gray-600', 'bg-gray-700', 'hover:bg-blue-700', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-400', 'text-gray-200');
+                    button.dataset.index = i;
+                    button.addEventListener('click', handleOptionClick);
+                    optionsContainer.appendChild(button);
+                });
+                
+                questionArea.classList.remove('hidden');
+            }
+
+            function handleOptionClick(e) {
+                const selectedButton = e.target;
+                const selectedIndex = parseInt(selectedButton.dataset.index);
+                const questionIndex = selector.value;
+                const question = quizData[questionIndex];
+
+                // Disable all buttons
+                const allButtons = optionsContainer.querySelectorAll('button');
+                allButtons.forEach(btn => {
+                    btn.disabled = true;
+                    btn.removeEventListener('click', handleOptionClick);
+                    // Remove hover effects
+                    btn.classList.remove('hover:bg-blue-700'); 
+                });
+
+                if (selectedIndex === question.correctAnswerIndex) {
+                    selectedButton.classList.add('correct');
+                    feedbackTitle.textContent = '¡Respuesta Correcta!';
+                    feedbackArea.className = 'mt-6 p-5 rounded-lg bg-green-900/50 border border-green-500 text-white';
+                } else {
+                    selectedButton.classList.add('incorrect');
+                    // Highlight the correct answer
+                    allButtons[question.correctAnswerIndex].classList.add('correct');
+                    feedbackTitle.textContent = 'Respuesta Incorrecta';
+                    feedbackArea.className = 'mt-6 p-5 rounded-lg bg-red-900/50 border border-red-500 text-white';
+                }
+
+                feedbackJustification.textContent = question.justification;
+                feedbackArea.classList.remove('hidden');
+                feedbackArea.scrollIntoView({ behavior: 'smooth' });
+            }
+        });
+    </script>
+</body>
+</html>
