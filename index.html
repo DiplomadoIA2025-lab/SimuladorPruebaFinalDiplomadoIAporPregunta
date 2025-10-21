@@ -53,15 +53,21 @@
             <!-- Header -->
             <div class="text-center mb-6">
                 <h1 class="text-3xl md:text-4xl font-bold text-white tracking-tight">Simulador de Evaluación IA</h1>
-                <p class="text-blue-300 mt-2">Selecciona una pregunta y pon a prueba tus conocimientos.</p>
+                <p class="text-blue-300 mt-2">Busca o selecciona una pregunta y pon a prueba tus conocimientos.</p>
             </div>
             
-            <!-- Question Selector -->
-            <div class="mb-6">
-                <label for="question-selector" class="block mb-2 text-sm font-medium text-gray-300">Elige una pregunta:</label>
-                <select id="question-selector" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
-                    <option selected disabled>Selecciona una pregunta de la lista...</option>
-                </select>
+            <!-- Question Selector & Search -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div>
+                    <label for="search-box" class="block mb-2 text-sm font-medium text-gray-300">Busca por texto de la pregunta:</label>
+                    <input type="text" id="search-box" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="Ej: 'mito común', 'IA generativa'">
+                </div>
+                <div>
+                    <label for="question-selector" class="block mb-2 text-sm font-medium text-gray-300">O elige una pregunta (orden alfabético):</label>
+                    <select id="question-selector" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                        <option selected disabled value="">Selecciona una pregunta de la lista...</option>
+                    </select>
+                </div>
             </div>
             
             <!-- Question Display -->
@@ -443,6 +449,7 @@
 
 
             const selector = document.getElementById('question-selector');
+            const searchBox = document.getElementById('search-box');
             const questionArea = document.getElementById('question-area');
             const questionText = document.getElementById('question-text');
             const optionsContainer = document.getElementById('options-container');
@@ -450,16 +457,44 @@
             const feedbackTitle = document.getElementById('feedback-title');
             const feedbackJustification = document.getElementById('feedback-justification');
 
-            // Populate selector
-            quizData.forEach((q, index) => {
+            // Create a new array that includes the original index, then sort it by text
+            const sortedQuestions = quizData
+                .map((question, index) => ({ text: question.text, originalIndex: index }))
+                .sort((a, b) => a.text.localeCompare(b.text));
+
+            // Populate selector using the sorted array
+            sortedQuestions.forEach(q => {
                 const option = document.createElement('option');
-                option.value = index;
-                option.textContent = `Pregunta ${q.id}: ${q.text.substring(0, 70)}...`;
+                option.value = q.originalIndex; // Use the original index to fetch from quizData
+                option.textContent = q.text.substring(0, 80) + (q.text.length > 80 ? '...' : '');
                 selector.appendChild(option);
             });
             
             selector.addEventListener('change', (e) => {
                 displayQuestion(e.target.value);
+            });
+
+            searchBox.addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase().trim();
+                const options = selector.getElementsByTagName('option');
+
+                for (let i = 1; i < options.length; i++) { // Start at 1 to skip placeholder
+                    const option = options[i];
+                    const questionIndex = option.value;
+                    const questionFullText = quizData[questionIndex].text.toLowerCase();
+
+                    if (questionFullText.includes(searchTerm)) {
+                        option.style.display = 'block';
+                    } else {
+                        option.style.display = 'none';
+                    }
+                }
+
+                if (searchTerm === '') {
+                    selector.selectedIndex = 0;
+                    questionArea.classList.add('hidden');
+                    feedbackArea.classList.add('hidden');
+                }
             });
 
             function displayQuestion(index) {
@@ -519,3 +554,4 @@
     </script>
 </body>
 </html>
+
